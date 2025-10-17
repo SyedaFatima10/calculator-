@@ -3,72 +3,73 @@
 # =============================================
 
 import streamlit as st
+import pandas as pd
 
 # -----------------------------
-# Page Configuration
+# App Configuration
 # -----------------------------
 st.set_page_config(page_title="GPA & CGPA Calculator", layout="wide")
 
 # -----------------------------
-# App Header
+# Header
 # -----------------------------
 st.title("🎓 GPA & CGPA Calculator (First 4 Semesters)")
+st.write("Input your marks and get your GPA per semester and overall CGPA.")
 
 # -----------------------------
 # Function to calculate GPA
 # -----------------------------
 def calculate_gpa(marks):
-    # Assuming GPA scale: 90-100:4, 80-89:3.5, 70-79:3, 60-69:2.5, 50-59:2, <50:0
-    gpa_points = []
+    """Assuming GPA scale out of 4"""
+    gpa_list = []
     for mark in marks:
-        if mark >= 90:
-            gpa_points.append(4.0)
+        if mark >= 85:
+            gpa_list.append(4.0)
         elif mark >= 80:
-            gpa_points.append(3.5)
+            gpa_list.append(3.7)
+        elif mark >= 75:
+            gpa_list.append(3.3)
         elif mark >= 70:
-            gpa_points.append(3.0)
+            gpa_list.append(3.0)
+        elif mark >= 65:
+            gpa_list.append(2.7)
         elif mark >= 60:
-            gpa_points.append(2.5)
+            gpa_list.append(2.3)
+        elif mark >= 55:
+            gpa_list.append(2.0)
         elif mark >= 50:
-            gpa_points.append(2.0)
+            gpa_list.append(1.7)
+        elif mark >= 45:
+            gpa_list.append(1.0)
         else:
-            gpa_points.append(0)
-    return round(sum(gpa_points)/len(gpa_points), 2)
+            gpa_list.append(0.0)
+    return round(sum(gpa_list)/len(gpa_list), 2)
 
 # -----------------------------
-# Sidebar for number of courses
+# Tabs for Semesters
 # -----------------------------
-st.sidebar.header("📚 Number of Courses per Semester")
-num_courses = {}
-for sem in range(1, 5):
-    num_courses[sem] = st.sidebar.number_input(f"Semester {sem}", min_value=1, max_value=10, value=5, step=1)
+tabs = st.tabs(["Semester 1", "Semester 2", "Semester 3", "Semester 4"])
 
-# -----------------------------
-# Tabs for each semester
-# -----------------------------
-tabs = st.tabs([f"Semester {i}" for i in range(1, 5)])
-semester_marks = {}
+semester_gpas = []
 
 for i, tab in enumerate(tabs):
-    sem = i + 1
     with tab:
-        st.subheader(f"Enter marks for Semester {sem}")
+        st.subheader(f"Semester {i+1}")
+        num_courses = st.number_input(f"Enter number of courses in Semester {i+1}", min_value=1, step=1, key=f"num_{i}")
         marks = []
-        for j in range(1, num_courses[sem]+1):
-            mark = st.number_input(f"Subject {j}", min_value=0, max_value=100, value=0)
+        for j in range(int(num_courses)):
+            mark = st.number_input(f"Enter marks for course {j+1} (0-100)", min_value=0, max_value=100, key=f"{i}_{j}")
             marks.append(mark)
-        semester_marks[sem] = marks
+        
+        if st.button(f"Calculate GPA for Semester {i+1}", key=f"btn_{i}"):
+            gpa = calculate_gpa(marks)
+            semester_gpas.append(gpa)
+            st.success(f"✅ GPA for Semester {i+1}: {gpa}")
 
 # -----------------------------
-# Calculate GPA and CGPA
+# CGPA Calculation
 # -----------------------------
-if st.button("Calculate GPA & CGPA"):
-    gpa_list = []
-    st.subheader("📊 GPA for Each Semester")
-    for sem in range(1, 5):
-        gpa = calculate_gpa(semester_marks[sem])
-        gpa_list.append(gpa)
-        st.write(f"Semester {sem} GPA: {gpa}")
-
-    cgpa = round(sum(gpa_list)/len(gpa_list), 2)
-    st.subheader(f"🎯 Overall CGPA: {cgpa}")
+if len(semester_gpas) == 4:
+    cgpa = round(sum(semester_gpas)/4, 2)
+    st.balloons()
+    st.header(f"🎉 Your CGPA till 4th Semester: {cgpa}")
